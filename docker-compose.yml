@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+    image: ghcr.io/youruser/webchess:php56   # optional: Portainer can also tag this when building
+    container_name: webchess-web
+    depends_on:
+      - db
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    # If you prefer live-editing files without rebuilds, you can uncomment the bind:
+    # volumes:
+    #   - ./app:/var/www/html
+
+  db:
+    image: mariadb:10.6
+    container_name: webchess-db
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-RootSecret_ChangeMe}"
+      MYSQL_DATABASE:     "${MYSQL_DATABASE:-webchess}"
+      MYSQL_USER:         "${MYSQL_USER:-webchess}"
+      MYSQL_PASSWORD:     "${MYSQL_PASSWORD:-ChangeMe123!}"
+    volumes:
+      - dbdata:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-RootSecret_ChangeMe}"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dbdata:
